@@ -20,6 +20,7 @@ jobs:
       backend_changed: ${{ steps.changes.outputs.backend }}
       frontend_changed: ${{ steps.changes.outputs.frontend }}
       buildfiles_changed: ${{ steps.changes.outputs.buildfiles }}
+      workflows_changed: ${{ steps.changes.outputs.workflows }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -37,12 +38,18 @@ jobs:
               - 'gradle/**'
               - 'gradlew'
               - 'gradlew.bat'
+            workflows:
+              - '.github/workflows/**'
 
   # ==== BUILD (bez testů) ====
   build-backend:
     runs-on: ubuntu-latest
     needs: filter
-    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    if: ${{ needs.filter.outputs.backend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true' 
+            || github.event_name == 'pull_request' 
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -61,7 +68,11 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     needs: filter
-    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true' 
+            || github.event_name == 'pull_request'
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -81,7 +92,11 @@ jobs:
   test-backend:
     runs-on: ubuntu-latest
     needs: build-backend
-    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    if: ${{ needs.filter.outputs.backend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true' 
+            || github.event_name == 'pull_request'
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main' }}
     env:
       SPRING_PROFILES_ACTIVE: test
     steps:
@@ -109,7 +124,11 @@ jobs:
   test-frontend:
     runs-on: ubuntu-latest
     needs: build-frontend
-    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true' 
+            || github.event_name == 'pull_request'
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main' }}
     env:
       SPRING_PROFILES_ACTIVE: test
     steps:
@@ -138,7 +157,10 @@ jobs:
   package-backend:
     runs-on: ubuntu-latest
     needs: test-backend
-    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' }}
+    if: ${{ needs.filter.outputs.backend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true'
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -162,7 +184,10 @@ jobs:
   package-frontend:
     runs-on: ubuntu-latest
     needs: test-frontend
-    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' }}
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' 
+            || needs.filter.outputs.buildfiles_changed == 'true'
+            || needs.filter.outputs.workflows_changed == 'true'
+            || github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
