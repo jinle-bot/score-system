@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>New Subject</title>
+</head>
+<body>
+
+<header>
+  <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+<h1>New subject successfully added </h1>
+
+<ul>
+  <li th:text="${subject.name}"></li>
+  <li th:text="${subject.schoolYear}"></li>
+  <li th:text="${subject.semester}"></li>
+</ul>
+
+  <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+</main>
+
+<a th:href="@{/subjects}">
+  <button type="button">Subjects</button>
+</a>
+
+
+
+</body>
+
+</html>

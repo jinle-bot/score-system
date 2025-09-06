@@ -1,0 +1,41 @@
+# --- Text soubory (normalizace konců řádků) ---
+* text=auto
+
+# Gradle wrapper
+/gradlew    text eol=lf
+*.bat       text eol=crlf
+*.gradle    text
+*.gradle.kts text
+
+# Java soubory
+*.java      text diff=java
+
+# Konfigurace a properties
+*.xml       text
+*.yml       text
+*.yaml      text
+*.properties text
+*.md        text
+*.txt       text
+*.gitignore text
+*.gitattributes text
+
+# --- Binární soubory (bez konverze EOL, bez diffů) ---
+*.jar       binary
+*.war       binary
+*.ear       binary
+*.class     binary
+*.so        binary
+*.dll       binary
+*.exe       binary
+
+# Obrázky a dokumenty
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.tar.gz    binary
+*.7z        binary

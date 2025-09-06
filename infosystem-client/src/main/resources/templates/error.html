@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+</head>
+<body>
+
+<header>
+    <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+
+<h1>Error <span th:text="${errMsg}"></span></h1>
+
+    <a th:if="${previousPage != null}" th:href="${previousPage}">
+        <button type="button">Go Back</button>
+    </a>
+    </main>
+</body>
+
+</html>

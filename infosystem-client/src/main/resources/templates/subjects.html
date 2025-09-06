@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Subjects</title>
+</head>
+<body>
+<header>
+  <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+<h1>Subjects</h1>
+
+<table th:if="${not #lists.isEmpty(subjects)}">
+  <tbody>
+  <tr>
+    <th>Name</th>
+    <th>School Year</th>
+    <th>Semester</th>
+  </tr>
+  <tr th:each="subject : ${subjects}">
+    <td> <a th:href="@{/subjects/{subjectId}(subjectId=${subject.id})}" th:text="${subject.name}"> </a> </td>
+    <td th:text="${subject.schoolYear}"></td>
+    <td th:text="${subject.semester}"></td>
+  </tr>
+  </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(subjects)}"> No subjects </div>
+
+<h2>Add Subject</h2>
+<form th:action="@{/subjects}" method="post">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name">
+
+  <label for="schoolYear">School Year:</label>
+  <input type="text" id="schoolYear" name="schoolYear">
+
+  <label for="semester">Semester:</label>
+  <input type="number" id="semester" name="semester">
+
+  <button type="submit">Add</button>
+</form>
+
+  <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+</main>
+
+<footer>
+  <a th:href="@{/dashboard}">
+    <button type="button">Dashboard</button>
+  </a>
+</footer>
+
+</body>
+
+</html>

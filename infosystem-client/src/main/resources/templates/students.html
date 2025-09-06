@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Students</title>
+</head>
+<body>
+<header>
+  <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+  <div th:if="subject != null">
+<h1>Students for Subject <span th:text="${subject.name}"></span></h1>
+
+<table th:if="${not #lists.isEmpty(students)}">
+  <tbody>
+  <tr> <th>Id</th>
+    <th>Username</th>
+    <th>Email</th>
+  <tr th:each="student : ${students}">
+    <td th:text="${student.id}"></td>
+    <td th:text="${student.username}"></td>
+    <td th:text="${student.email}"></td>
+  </tr>
+  </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(students)}"> No students in the subject </div>
+
+<h2>Add Student</h2>
+<form th:action="@{/subjects/{subjectId}/students(subjectId=${subject.id})}" method="post">
+  <label for="username">Username:</label>
+  <input type="text" id="username" name="Username" required>
+
+  <button type="submit">Add</button>
+</form>
+  </div>
+  <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+</main>
+<footer>
+  <a th:href="@{/subjects/{subjectId}(subjectId=${subject.id})}">
+    <button type="button">Subject <span th:text="${subject.name}"></span> </button>
+  </a>
+</footer>
+</body>
+
+</html>

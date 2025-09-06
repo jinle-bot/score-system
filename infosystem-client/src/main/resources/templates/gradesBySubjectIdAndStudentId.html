@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Grades</title>
+</head>
+
+<body>
+<header>
+    <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+<div th:if="grades != null">
+<h1>Your Grades:</h1>
+<table th:if="${not #lists.isEmpty(grades)}">
+    <tr> <th>Activity</th> <th>Score</th> </tr>
+    <tr th:each="grade : ${grades}">
+        <td th:text="${grade.activity.name}"></td> <td th:text="${grade.score}"></td>
+    </tr>
+</table>
+
+<div th:if="${#lists.isEmpty(grades)}"> No grades in the subject </div></div>
+    <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+</main>
+<footer>
+    <a th:href="@{/dashboard}">
+        <button type="button">Dashboard</button>
+    </a>
+</footer>
+</body>
+</html>

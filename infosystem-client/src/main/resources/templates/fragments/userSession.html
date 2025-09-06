@@ -1,0 +1,6 @@
+
+<div th:fragment="userSession" th:if="${userSession}">
+  <p>Welcome, <span th:text="${userSession.username}"></span>!</p>
+  <p>Role: <span th:text="${userSession.userType}"></span></p>
+  <a href="/auth/logout">Logout</a>
+</div>

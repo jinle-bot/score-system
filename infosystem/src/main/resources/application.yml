@@ -1,0 +1,107 @@
+# --- společné minimum (platí pro všechny profily, lze přepsat v profilech) ---
+spring:
+  application:
+    name: infosystem
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"   # přidej co potřebuješ (prometheus atd.)
+  endpoint:
+    health:
+      show-details: when_authorized
+
+
+# ===== dev profil (lokální vývoj) =====
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/infosystem_db
+    username: info_user
+    password: info_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update           # pro vývoj ok; v prod raději validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  address: 127.0.0.1
+
+logging:
+  level:
+    root: info
+    org.springframework.security: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
+
+# JWT a další tajemství ber z ENV (lokálně můžeš dát .env / IDE Run Config)
+security:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-override-me}
+    expiration-minutes: ${JWT_EXP_MIN:60}
+
+
+# ===== test profil (testy, H2) =====
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:school;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+
+
+# ===== prod profil (produkce / docker / cloud) =====
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}           # např. jdbc:postgresql://db:5432/school
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate                    # v prod validuj, nemigruj schéma
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    root: info
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}                   # nastav v CI/VM
+    expiration-minutes: ${JWT_EXP_MIN:60}
+

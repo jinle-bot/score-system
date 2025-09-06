@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Activities</title>
+</head>
+<body>
+
+<header>
+  <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+<h1>Activities for Subject <span th:text="${subject.name}"></span></h1>
+
+<table th:if="${not #lists.isEmpty(activities)}">
+  <tbody>
+  <tr> <th>Number</th>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Min</th>
+    <th>Max</th>
+    <th>Date</th> </tr>
+  <tr th:each="activity : ${activities}">
+    <td th:text="${activity.priority}"></td>
+    <td>
+      <a th:href="@{/subjects/{subjectId}/activities/{activityId}/grades(subjectId=${subject.id}, activityId=${activity.id})}" th:text="${activity.name}"> </a> </td>
+    <td th:text="${activity.description}"></td>
+    <td th:text="${activity.minimum}"></td>
+    <td th:text="${activity.maximum}"></td>
+    <td th:text="${activity.date}"></td>
+  </tr>
+  </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(activities)}"> No activities in the subject </div>
+
+<h2>Add Activity</h2>
+<form th:action="@{/subjects/{subjectId}/activities(subjectId=${subject.id})}" method="post">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name">
+
+  <label for="description">Description:</label>
+  <input type="text" id="description" name="description">
+
+  <label for="min">Min:</label>
+  <input type="number" id="min" name="minimum">
+
+  <label for="max">Max:</label>
+  <input type="number" id="max" name="maximum">
+
+  <label>
+    <input type="radio" name=mandatory th:value="true" /> Mandatory
+  </label>
+  <label>
+    <input type="radio" name=mandatory th:value="false" /> Not Mandatory
+  </label>
+
+  <label for="date">Date:</label>
+  <input type="date" id="date" name="date">
+
+  <label for="order">Order:</label>
+  <input type="number" id="order" name="priority" required>
+
+  <button type="submit">Add</button>
+</form>
+
+  <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+  <a th:href="@{/subjects/{subjectId}(subjectId=${subjectId})}">
+    <button type="button">Subject <span th:text="${subject.name}"></span></button>
+  </a>
+
+</main>
+
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>New Activity</title>
+</head>
+<body>
+
+<header>
+    <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+
+<h1>New Activity added for subject <span th:text="${activity.subject.name}"></span></h1>
+
+<ul>
+    <li th:text="${activity.name}"></li>
+    <li th:text="${activity.description}"></li>
+    <li th:text="${activity.date}"></li>
+    <li th:text="${activity.minimum}"></li>
+    <li th:text="${activity.maximum}"></li>
+    <li th:text="${activity.mandatory}"></li>
+</ul>
+
+        <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+
+
+    <form th:action="@{/subjects/{subjectId}/activities(subjectId=${activity.subject.id})}" method="get">
+    <button>Back</button>
+</form>
+
+</main>
+
+</body>
+
+</html>

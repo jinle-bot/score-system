@@ -1,0 +1,171 @@
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+variables:
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx2g"
+  BACKEND_DIR: "infosystem"
+  FRONTEND_DIR: "infosystem-client"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .gradle/wrapper/
+    - .gradle/caches/
+
+.before-gradle:
+  image: amazoncorretto:17
+  before_script:
+    - chmod +x ./gradlew
+    - echo "Using Gradle in $GRADLE_USER_HOME"
+
+
+# ===== BUILD (kompilace bez testů) =====
+build-backend:
+  stage: build
+  extends: .before-gradle
+  script:
+    - echo "Building backend"
+    - ./gradlew :BACKEND_DIR:assemble -x test --no-daemon
+  artifacts:
+    when: always
+    paths:
+      - BACKEND_DIR/build/libs/
+  rules:
+    - changes:
+        - BACKEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+build-frontend:
+  stage: build
+  extends: .before-gradle
+  script:
+    - echo "Building frontend"
+    - ./gradlew :FRONTEND_DIR:assemble -x test --no-daemon
+  artifacts:
+    when: always
+    paths:
+      - FRONTEND_DIR/build/libs/
+  rules:
+    - changes:
+        - FRONTEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+
+# ===== TEST =====
+test-backend:
+  stage: test
+  variables:
+    SPRING_PROFILES_ACTIVE: test
+  needs: ["build-backend"]
+  extends: .before-gradle
+  script:
+    - echo "Testing backend"
+    - ./gradlew :BACKEND_DIR:test --no-daemon
+    - ./gradlew :BACKEND_DIR:jacocoTestReport --no-daemon || true
+  artifacts:
+    when: always
+    reports:
+      junit: BACKEND_DIR/build/test-results/test/*.xml
+    paths:
+      - BACKEND_DIR/build/reports/tests/test/
+      - BACKEND_DIR/build/reports/jacoco/test/html/
+      - BACKEND_DIR/build/reports/jacoco/test/jacocoTestReport.xml
+  rules:
+    - changes:
+        - BACKEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+test-frontend:
+  stage: test
+  variables:
+    SPRING_PROFILES_ACTIVE: test
+  needs: ["build-frontend"]
+  extends: .before-gradle
+  script:
+    - echo "Testing frontend"
+    - ./gradlew :FRONTEND_DIR:test --no-daemon
+    - ./gradlew :FRONTEND_DIR:jacocoTestReport --no-daemon || true
+  artifacts:
+    when: always
+    reports:
+      junit: FRONTEND_DIR/build/test-results/test/*.xml
+    paths:
+      - FRONTEND_DIR/build/reports/tests/test/
+      - FRONTEND_DIR/build/reports/jacoco/test/html/
+      - FRONTEND_DIR/build/reports/jacoco/test/jacocoTestReport.xml
+  rules:
+    - changes:
+        - FRONTEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+
+# ===== PACKAGE (bootJar) =====
+package-backend:
+  stage: package
+  needs: ["test-backend"]
+  extends: .before-gradle
+  script:
+    - ./gradlew :BACKEND_DIR:bootJar --no-daemon
+  artifacts:
+    when: always
+    paths:
+      - BACKEND_DIR/build/libs/*-SNAPSHOT.jar
+      - BACKEND_DIR/build/libs/*-plain.jar
+      - BACKEND_DIR/build/libs/*.jar
+    expire_in: 2 weeks
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+      changes:
+        - BACKEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat
+
+package-frontend:
+  stage: package
+  needs: ["test-frontend"]
+  extends: .before-gradle
+  script:
+    - ./gradlew :FRONTEND_DIR:bootJar --no-daemon
+  artifacts:
+    when: always
+    paths:
+      - FRONTEND_DIR/build/libs/*-SNAPSHOT.jar
+      - FRONTEND_DIR/build/libs/*-plain.jar
+      - FRONTEND_DIR/build/libs/*.jar
+    expire_in: 2 weeks
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+      changes:
+        - FRONTEND_DIR/**/*
+        - build.gradle
+        - settings.gradle
+        - gradle/**/*
+        - gradlew
+        - gradlew.bat

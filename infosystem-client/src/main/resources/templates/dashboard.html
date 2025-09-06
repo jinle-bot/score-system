@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+
+<body>
+
+<header>
+    <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+
+<!-- Show this section only for STUDENT -->
+<div th:if="${userSession.userType == 'STUDENT'}">
+    <h2>Your Subjects</h2>
+    <ul>
+        <li th:each="subject : ${subjects}">
+            <a th:href="@{/subjects/{id}/grades(id=${subject.id})}" th:text="${subject.name}"></a>
+        </li>
+    </ul>
+</div>
+
+<!-- Show this section only for TEACHER -->
+<div th:if="${showTeacherOptions}">
+    <h2>Teacher Options</h2>
+    <ul>
+        <li><a href="/subjects">Manage Subjects</a></li>
+        <li><a href="/users">Manage Users</a></li>
+    </ul>
+</div>
+
+    </main>
+</body>
+</html>

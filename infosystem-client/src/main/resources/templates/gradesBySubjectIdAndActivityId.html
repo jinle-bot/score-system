@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Grades</title>
+</head>
+
+<body>
+<header>
+  <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+  <div th:if="grades != null">
+<h1> Grades of your students:</h1>
+<table th:if="${not #lists.isEmpty(grades)}">
+  <tr> <th>Username</th> <th>Score</th> <th> Date </th> </tr>
+  <tr th:each="grade : ${grades}">
+    <td th:text="${grade.username}"></td> <td th:text="${grade.score}"></td> <td th:text="${grade.date}"></td>
+  </tr>
+</table>
+
+
+<div th:if="${#lists.isEmpty(grades)}"> No grades in this activity </div>
+  </div>
+<!-- -->
+<h2>Add Grade for a Student</h2>
+<form th:action="@{/subjects/{subjectId}/activities/{activityId}/grades(subjectId=${subject}, activityId=${activity})}" method="post" >
+  <label for="username">Student Username:</label>
+  <input type="text" id="username" name="username">
+
+  <label for="score">Score</label>
+  <input type="number" id="score" name="score">
+
+  <label for="date">Date:</label>
+  <input type="date" id="date" name="date">
+
+  <button type="submit">Add</button>
+</form>
+
+  <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+</main>
+<footer>
+  <a th:href="@{/subjects/{subjectId}/activities(subjectId=${subject})}">
+    <button type="button">Activities</button>
+  </a>
+</footer>
+</body>
+</html>

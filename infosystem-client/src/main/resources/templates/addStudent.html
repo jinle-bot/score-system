@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>New Student</title>
+</head>
+<body>
+
+<header>
+    <div th:replace="~{fragments/userSession :: userSession}"></div>
+</header>
+
+<main>
+
+<h1>New Student added for subject</h1>
+
+<ul>
+    <li th:text="${student.username}"></li>
+    <li th:text="${student.email}"></li>
+</ul>
+
+    <div th:replace="~{fragments/errorMesg :: errMesg}"></div>
+
+<form th:action="@{/subjects/{subjectId}/students(subjectId=${subjectId})}" method="get">
+    <button>Back</button>
+</form>
+
+</main>
+
+</body>
+
+</html>
