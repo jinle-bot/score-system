@@ -1,0 +1,182 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch: {}
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx2g"
+  BACKEND_DIR: "infosystem"
+  FRONTEND_DIR: "infosystem-client"
+
+jobs:
+  # ---- Zjisti, co se změnilo (náhrada za GitLab rules:changes) ----
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      backend_changed: ${{ steps.changes.outputs.backend }}
+      frontend_changed: ${{ steps.changes.outputs.frontend }}
+      buildfiles_changed: ${{ steps.changes.outputs.buildfiles }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          token: ${{ github.token }}
+          filters: |
+            backend:
+              - '${{ env.BACKEND_DIR }}/**'
+            frontend:
+              - '${{ env.FRONTEND_DIR }}/**'
+            buildfiles:
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+  # ==== BUILD (bez testů) ====
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: filter
+    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Building backend
+        run: ./gradlew :${{ env.BACKEND_DIR }}:assemble -x test --no-daemon
+      - name: Upload backend libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-libs
+          path: ${{ env.BACKEND_DIR }}/build/libs/
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: filter
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Building frontend
+        run: ./gradlew :${{ env.FRONTEND_DIR }}:assemble -x test --no-daemon
+      - name: Upload frontend libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-libs
+          path: ${{ env.FRONTEND_DIR }}/build/libs/
+
+  # ==== TEST ====
+  test-backend:
+    runs-on: ubuntu-latest
+    needs: build-backend
+    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    env:
+      SPRING_PROFILES_ACTIVE: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Testing backend
+        run: |
+          ./gradlew :${{ env.BACKEND_DIR }}:test --no-daemon
+          ./gradlew :${{ env.BACKEND_DIR }}:jacocoTestReport --no-daemon || true
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            ${{ env.BACKEND_DIR }}/build/reports/tests/test/
+            ${{ env.BACKEND_DIR }}/build/test-results/test/
+            ${{ env.BACKEND_DIR }}/build/reports/jacoco/test/html/
+            ${{ env.BACKEND_DIR }}/build/reports/jacoco/test/jacocoTestReport.xml
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' || github.event_name == 'pull_request' }}
+    env:
+      SPRING_PROFILES_ACTIVE: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Testing frontend
+        run: |
+          ./gradlew :${{ env.FRONTEND_DIR }}:test --no-daemon
+          ./gradlew :${{ env.FRONTEND_DIR }}:jacocoTestReport --no-daemon || true
+      - name: Upload frontend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-reports
+          path: |
+            ${{ env.FRONTEND_DIR }}/build/reports/tests/test/
+            ${{ env.FRONTEND_DIR }}/build/test-results/test/
+            ${{ env.FRONTEND_DIR }}/build/reports/jacoco/test/html/
+            ${{ env.FRONTEND_DIR }}/build/reports/jacoco/test/jacocoTestReport.xml
+
+  # ==== PACKAGE (bootJar) ====
+  package-backend:
+    runs-on: ubuntu-latest
+    needs: test-backend
+    if: ${{ needs.filter.outputs.backend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Package backend (bootJar)
+        run: ./gradlew :${{ env.BACKEND_DIR }}:bootJar --no-daemon
+      - name: Upload backend jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jars
+          path: |
+            ${{ env.BACKEND_DIR }}/build/libs/*-SNAPSHOT.jar
+            ${{ env.BACKEND_DIR }}/build/libs/*-plain.jar
+            ${{ env.BACKEND_DIR }}/build/libs/*.jar
+      - name: Cleanup backend jars after 14 days
+        run: echo "Artifacts retention handled by Actions (default 90d)."
+
+  package-frontend:
+    runs-on: ubuntu-latest
+    needs: test-frontend
+    if: ${{ needs.filter.outputs.frontend_changed == 'true' || needs.filter.outputs.buildfiles_changed == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Package frontend (bootJar)
+        run: ./gradlew :${{ env.FRONTEND_DIR }}:bootJar --no-daemon
+      - name: Upload frontend jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-jars
+          path: |
+            ${{ env.FRONTEND_DIR }}/build/libs/*-SNAPSHOT.jar
+            ${{ env.FRONTEND_DIR }}/build/libs/*-plain.jar
+            ${{ env.FRONTEND_DIR }}/build/libs/*.jar
