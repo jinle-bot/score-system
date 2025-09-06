@@ -14,12 +14,16 @@ spring:
     password: ""
 
   jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop     # při každém test běhu vytvoř a po skončení dropni
     open-in-view: false
     properties:
       hibernate.jdbc.time_zone: UTC
 
+  flyway:
+    enabled: false
+    
   sql:
     init:
       mode: never               # seed do testů typicky ne; radši @Sql na konkrétní testy

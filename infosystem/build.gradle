@@ -20,8 +20,8 @@ dependencies {
 
 	// H2 doporučuju jen do testů:
 	testImplementation 'com.h2database:h2'
-
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
