@@ -1,0 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  thymeleaf:
+    cache: false
+
+server:
+  port: 0
+
+# Při běhu unit/integration testů typicky voláš mock/embedded backend,
+# nebo nep voláš vůbec – nechávám default localhost, případně si v testech přepiš @TestPropertySource.
+backend:
+  base-url: http://localhost:8081
+
+logging:
+  level:
+    root: WARN

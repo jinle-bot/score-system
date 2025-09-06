@@ -1,14 +1,28 @@
 spring:
   application:
     name: infosystem-client
+  thymeleaf:
+    cache: false            # v dev/test vypnuto; prod přepíšeme na true
+  main:
+    banner-mode: "off"
 
 server:
   port: 8080
+  address: 0.0.0.0          # naslouchat všude (docker/k8s); v dev přepíšeme na 127.0.0.1
+  compression:
+    enabled: true
 
-# společné – Thymeleaf
-spring:
-  thymeleaf:
-    cache: false        # v prod dej true (viz níže)
+logging:
+  level:
+    root: info
+
+# Vlastní properties pro WebClient (přepiš v profilech)
+backend:
+  base-url: http://localhost:8081
+  http:
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
+
 
 # ===== dev =====
 ---

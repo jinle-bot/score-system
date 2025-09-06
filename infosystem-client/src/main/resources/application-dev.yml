@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  thymeleaf:
+    cache: false
+
+server:
+  address: 127.0.0.1          # jen lokálně (můžeš změnit na 0.0.0.0, když testuješ z jiné mašiny)
+
+backend:
+  base-url: http://localhost:8081
+
+logging:
+  level:
+    root: info
+    org.springframework.web: info
