@@ -1,7 +1,6 @@
 ### Gradle ###
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
 
 # výstupy v submodulech
 **/build/
@@ -51,3 +50,6 @@ Thumbs.db
 
 ### Logs ###
 *.log
+
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
