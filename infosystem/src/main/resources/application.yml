@@ -1,22 +1,63 @@
-# --- společné minimum (platí pro všechny profily, lze přepsat v profilech) ---
+# src/main/resources/application.yml
+# ------------------------------------------------------------
+# Společné minimum – platí pro všechny profily (dev/test/prod).
+# ------------------------------------------------------------
+
 spring:
   application:
     name: infosystem
   jackson:
+    # ISO-8601 místo timestampů
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
+  jpa:
+    # Lepší než default ON (omezuje lazy-loading mimo transakce)
+    open-in-view: false
+  main:
+    # Utiší banner při startu
+    banner-mode: "off"
+  sql:
+    # Init skripty výchozí vypnuto – zapínej v profilu dev/test, pokud chceš seed
+    init:
+      mode: never
 
 server:
+  # Výchozí port; možnost přepsat v profilech přes env SERVER_PORT
   port: 8081
+  # Když běží v Dockeru/K8s, naslouchej na všech rozhraních
+  address: 0.0.0.0
+  # GZIP komprese odpovědí
+  compression:
+    enabled: true
+  error:
+    # Bezpečnější výchozí chování chybových zpráv
+    include-message: "never"
+    include-binding-errors: "never"
 
 management:
   endpoints:
     web:
+      # Jen základ (další jako 'prometheus' v prod podle potřeby)
       exposure:
-        include: "health,info"   # přidej co potřebuješ (prometheus atd.)
+        include: "health,info"
   endpoint:
     health:
-      show-details: when_authorized
+      # Detailní zdraví jen pro autorizované (např. actuator user/role)
+      show-details: "when_authorized"
+
+logging:
+  level:
+    # Klidné defaulty; detailnější logování až v dev/test profilech
+    root: info
+
+# -----------------------------------------------
+# Místo pro tvoje „business“ properties s defaulty
+# (přepisuj v profilu dle prostředí)
+# -----------------------------------------------
+app:
+  # stránkování, technické limity apod.
+  default-page-size: 20
+
 
 
 # ===== dev profil (lokální vývoj) =====
@@ -30,6 +71,9 @@ spring:
     username: info_user
     password: info_pass
     driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
   jpa:
     hibernate:
       ddl-auto: update           # pro vývoj ok; v prod raději validate
@@ -57,26 +101,6 @@ security:
   jwt:
     secret: ${JWT_SECRET:dev-secret-override-me}
     expiration-minutes: ${JWT_EXP_MIN:60}
-
-
-# ===== test profil (testy, H2) =====
----
-spring:
-  config:
-    activate:
-      on-profile: test
-  datasource:
-    url: jdbc:h2:mem:school;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ""
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-  h2:
-    console:
-      enabled: true
 
 
 # ===== prod profil (produkce / docker / cloud) =====

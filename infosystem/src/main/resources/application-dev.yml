@@ -1,0 +1,74 @@
+# src/main/resources/application-dev.yml
+spring:
+  config:
+    activate:
+      on-profile: dev        # -> tento soubor se použije jen když je aktivní profil 'dev'
+
+  datasource:                # -> lokální Postgres pro vývoj
+    url: jdbc:postgresql://localhost:5432/infosystem_db
+    username: info_user
+    password: info_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:                  # -> rozumné defaulty pro vývoj (malý pool, rychlé navázání)
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: update       # -> ve vývoji necháme JPA schéma průběžně upravovat, s flyway přepnout na validate
+    show-sql: true           # -> loguj SQL do konzole
+    properties:
+      hibernate:
+        format_sql: true     # -> hezčí formátování SQL
+        jdbc:
+          time_zone: UTC     # -> sjednocení časové zóny v DB vrstvě (volitelné)
+
+  # flyway:
+  #   enabled: true
+  #   locations: classpath:db/migration
+  #   baseline-on-migrate: true
+  #   clean-disabled: false   # jen v dev!
+
+  sql:
+    init:
+      mode: never            # -> pokud chceš seed dat, přepni na 'always' a nastav soubory níže
+      # schema-locations: classpath:db/dev/schema.sql
+      # data-locations:   classpath:db/dev/data.sql
+      # data-locations: classpath:db/dev/seed/*.sql
+      #  continue-on-error: true
+
+  main:
+    lazy-initialization: true  # -> rychlejší start ve vývoji, bežné pro dev
+
+  mvc:
+    cors:                      # -> CORS pro dev frontendy běžící na jiném portu
+      mappings:
+        '[/**]':
+          allowed-origins: "http://localhost:8080"
+          allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+          allowed-headers: "*"
+          allow-credentials: true
+
+server:
+  port: 8081                 # -> backend poběží na 8081
+  address: 127.0.0.1         # -> jen lokálně (změň na 0.0.0.0, pokud chceš přístup z jiné mašiny)
+
+logging:
+  level:
+    root: info
+    org.springframework.security: debug     # -> detailnější security logy při ladění
+    org.hibernate.SQL: debug                # -> samotné SQL dotazy
+    org.hibernate.orm.jdbc.bind: trace      # -> hodnoty parametrů (Hibernate 6 / Spring Boot 3)
+    # org.hibernate.type.descriptor.sql: trace  # <- alternativa pro starší Hibernate
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics        # -> v dev klidně přidej 'metrics' apod., v prod opatrně
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-override-me}  # -> default pro dev; v prod vždy přes ENV
+    expiration-minutes: ${JWT_EXP_MIN:60}

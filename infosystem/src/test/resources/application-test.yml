@@ -1,0 +1,37 @@
+# src/test/resources/application-test.yml
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  main:
+    banner-mode: "off"
+
+  datasource:
+    url: jdbc:h2:mem:testdb; MODE=PostgreSQL; DB_CLOSE_DELAY=-1; DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop     # při každém test běhu vytvoř a po skončení dropni
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+  sql:
+    init:
+      mode: never               # seed do testů typicky ne; radši @Sql na konkrétní testy
+
+  h2:
+    console:
+      enabled: false
+
+server:
+  port: 0                       # pro @SpringBootTest(webEnvironment=RANDOM_PORT)
+
+logging:
+  level:
+    root: WARN
+    org.springframework.test: INFO
