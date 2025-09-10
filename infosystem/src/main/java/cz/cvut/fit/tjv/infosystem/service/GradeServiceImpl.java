@@ -1,39 +1,47 @@
 package cz.cvut.fit.tjv.infosystem.service;
 
 import cz.cvut.fit.tjv.infosystem.domain.*;
-import cz.cvut.fit.tjv.infosystem.repository.ActivityRepository;
-import cz.cvut.fit.tjv.infosystem.repository.GradeRepository;
-import cz.cvut.fit.tjv.infosystem.repository.SubjectRepository;
-import cz.cvut.fit.tjv.infosystem.repository.UserRepository;
+import cz.cvut.fit.tjv.infosystem.dto.GradeDTO;
+import cz.cvut.fit.tjv.infosystem.dto.activity.ActivitySummaryDto;
+import cz.cvut.fit.tjv.infosystem.dto.course.CourseHeaderDto;
+import cz.cvut.fit.tjv.infosystem.dto.grade.ActivityGradeItemResponseDto;
+import cz.cvut.fit.tjv.infosystem.dto.grade.CourseGradesResponseDto;
+import cz.cvut.fit.tjv.infosystem.exception.BusinessRuleViolation;
+import cz.cvut.fit.tjv.infosystem.exception.NotFoundException;
+import cz.cvut.fit.tjv.infosystem.mapper.CourseGradesMapper;
+import cz.cvut.fit.tjv.infosystem.repository.*;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class GradeServiceImpl extends CrudServiceImpl<Grade, Integer> implements GradeService {
 
     private final GradeRepository gradeRepository;
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
+    private final PersonRepository personRepository;
     private final SubjectRepository subjectRepository;
+    private final CourseRepository courseRepository;
+    private final CourseService courseService;
+    private final PersonService personService;
+    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentService enrollmentService;
+    private final ActivityGradeRepository activityGradeRepository;
+    private final CourseGradeRepository courseGradeRepository;
+    private final CourseGradesMapper courseGradesMapper;
 
-    @Autowired
-    public GradeServiceImpl(GradeRepository gradeRepository,
-                            ActivityRepository activityRepository,
-                            UserRepository userRepository,
-                            SubjectRepository subjectRepository,
-                            SubjectService subjectService) {
-        this.gradeRepository = gradeRepository;
-        this.activityRepository = activityRepository;
-        this.userRepository = userRepository;
-        this.subjectRepository = subjectRepository;
-    }
 
     @Override
     @Transactional
@@ -76,6 +84,20 @@ public class GradeServiceImpl extends CrudServiceImpl<Grade, Integer> implements
     }
 
     @Override
+    public CourseGradesResponseDto getCourseGradesByStudentAndCourse(Integer personId, Integer courseId) {
+        Course course = courseService.readById(courseId, "Course");
+        Person student = personService.studentValidator(personId);
+        enrollmentService.activeEnrollmentValidator(personId, courseId);
+
+        List<ActivityGrade> activityGrades =
+                activityGradeRepository.findByCourseAndStudent(course.getId(), student.getId());
+        CourseGrade courseGrade = courseGradeRepository.findOpenByCourseAndPerson(course.getId(), student.getId())
+                .orElseThrow(() -> new EntityNotFoundException()); //???
+
+        return courseGradesMapper.toDto(course, activityGrades, courseGrade);
+    }
+
+    @Override
     protected JpaRepository<Grade, Integer> getRepository() {
         return gradeRepository;
     }
@@ -96,5 +118,7 @@ public class GradeServiceImpl extends CrudServiceImpl<Grade, Integer> implements
         if ( ! subject.getStudents().contains(user) )
             throw new EntityNotFoundException("Student does not have the subject");
     }
+
+
 
 }
