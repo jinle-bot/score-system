@@ -1,7 +1,7 @@
-# TJV project - School System
+## Score System
 
 ## Overview
-The **TJV project** is a web application consisting of two main components:
+The **project** is a web application consisting of two main components:
 
 1. **Backend (infosystem)**: A Spring Boot application responsible for managing data related to students, teachers, courses, and grades.
 2. **Frontend (infosystem-client)**: A Spring Boot web application that uses Thymeleaf for the user interface and communicates with the backend via HTTP.
